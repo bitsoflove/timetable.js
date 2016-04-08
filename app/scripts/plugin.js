@@ -109,7 +109,7 @@ Timetable.Renderer = function(tt) {
 	}
 
 	Timetable.Renderer.prototype = {
-		draw: function(selector) {
+		draw: function(selector, rowHeight) {
 			function getScopeDurationHours(startHour, endHour) {
 				return endHour > startHour ? endHour - startHour : 24 + endHour - startHour;
 			}
@@ -127,6 +127,10 @@ Timetable.Renderer = function(tt) {
 				for (var k=0; k<timetable.locations.length; k++) {
 					var liNode = ulNode.appendChild(document.createElement('li'));
 					var spanNode = liNode.appendChild(document.createElement('span'));
+					var subRowCount = timetable.rows[k].subRows.length != 0 ? timetable.rows[k].subRows.length : 1;
+
+					liNode.style.height = rowHeight * subRowCount + "px";
+					liNode.style.lineHeight = rowHeight * subRowCount + "px";
 					spanNode.className = 'row-heading';
 					spanNode.textContent = timetable.locations[k];
 				}
@@ -163,7 +167,10 @@ Timetable.Renderer = function(tt) {
 				var ulNode = node.appendChild(document.createElement('ul'));
 				ulNode.className = 'room-timeline';
 				for (var k=0; k<timetable.locations.length; k++) {
+					var subRowCount = timetable.rows[k].subRows.length != 0 ? timetable.rows[k].subRows.length : 1;
 					var liNode = ulNode.appendChild(document.createElement('li'));
+
+					liNode.style.height = rowHeight * subRowCount + "px";
 					appendLocationEvents(timetable.locations[k], liNode);/**/
 				}
 			}
@@ -185,6 +192,7 @@ Timetable.Renderer = function(tt) {
 					aNode.href = event.url;
 				}
 				aNode.className = 'time-entry' + (event.className ? ' ' + event.className : '');
+				aNode.style.top = event.subRowIndex * rowHeight + "px";
 				aNode.style.width = computeEventBlockWidth(event);
 				aNode.style.left = computeEventBlockOffset(event);
 				smallNode.textContent = event.name;
@@ -204,9 +212,64 @@ Timetable.Renderer = function(tt) {
 				return (startHours - timetable.scope.hourStart) / scopeDurationHours * 100 + '%';
 			}
 
+			function computeSubRowData(data) {
+			    var locations = {};
+
+			    data.locations.map(function(location, i) {locations[location] = {index: i, rows: []}})
+
+			    data.events.map(function(event) {
+			        var start = event.startDate;
+			        var end = event.endDate;
+
+			        var location = locations[event.location];
+			        event.rowIndex = location.index;
+
+			        var rows = location.rows;
+
+			        var rowWithRoom = null;
+			        for (var i = 0; i < rows.length; i++) {
+			            var row = rows[i];
+			            for (var j = 0; j < row.length; j++) {
+			                var eventInRow = row[j];
+			                if (start < eventInRow.end && end > eventInRow.start) {
+			                    rowWithRoom = null;
+			                    break;
+			                } else {
+			                    rowWithRoom = {row: row, index: i};
+			                }
+			            }
+			            if (rowWithRoom) {
+			                break;
+			            }
+			        }
+
+			        var newEvent = {event: event, start: start, end: end};
+			        if (rowWithRoom) {
+			            rowWithRoom.row.push(newEvent);
+			            event.subRowIndex = rowWithRoom.index;
+			        } else {
+			            rows.push([newEvent]);
+			            event.subRowIndex = rows.length - 1;
+			        }
+
+			        return event;
+			    });
+
+			    data.rows = data.locations.map(function(location, i) {
+			        return {
+			            location: location,
+			            rowIndex: i,
+			            subRows: locations[location].rows
+			        };
+			    });
+
+			    return data;
+			}
+
 			var timetable = this.timetable;
 			var scopeDurationHours = getScopeDurationHours(timetable.scope.hourStart, timetable.scope.hourEnd);
 			var container = document.querySelector(selector);
+			computeSubRowData(timetable);
 			checkContainerPrecondition(container);
 			emptyNode(container);
 			appendTimetableAside(container);
@@ -215,4 +278,3 @@ Timetable.Renderer = function(tt) {
 	};
 
 })();
-
