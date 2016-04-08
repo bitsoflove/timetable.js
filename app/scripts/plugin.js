@@ -2,10 +2,13 @@
 
 'use strict';
 
-var Timetable = function() {
+var Timetable = function(options) {
 	this.scope = {
-		hourStart: 9,
-		hourEnd: 17
+		start: Infinity,
+		end: -Infinity,
+		hourStart: 24,
+		hourEnd: 0,
+		hourMargin: options.margin || 0
 	};
 	this.locations = [];
 	this.events = [];
@@ -41,16 +44,6 @@ Timetable.Renderer = function(tt) {
 	}
 
 	Timetable.prototype = {
-		setScope: function(start, end) {
-			if (isValidHourRange(start, end)) {
-				this.scope.hourStart = start;
-				this.scope.hourEnd = end;
-			} else {
-				throw new RangeError('Timetable scope should consist of (start, end) in whole hours from 0 to 23');
-			}
-
-			return this;
-		},
 		addLocations: function(newLocations) {
 			function hasProperFormat() {
 				return newLocations instanceof Array;
@@ -79,6 +72,17 @@ Timetable.Renderer = function(tt) {
 			if (!isValidTimeRange(start, end)) {
 				throw new Error('Invalid time range: ' + JSON.stringify([start, end]));
 			}
+
+
+			if (this.scope.start > start) {
+				this.scope.hourStart = start.getHours() - this.scope.hourMargin;
+			}
+			if (this.scope.end < end) {
+				this.scope.hourEnd = end.getHours() + (end.getMinutes() > 0 ? 1 : 0) + this.scope.hourMargin;
+			}
+
+			this.scope.start = Math.min(this.scope.start, start);
+			this.scope.end = Math.max(this.scope.end, end);
 
 			this.events.push({
 				name: name,
