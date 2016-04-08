@@ -72,7 +72,7 @@ Timetable.Renderer = function(tt) {
 
 			return this;
 		},
-		addEvent: function(name, location, start, end, url) {
+		addEvent: function(name, location, start, end, url, className) {
 			if (!locationExistsIn(location, this.locations)) {
 				throw new Error('Unknown location');
 			}
@@ -85,7 +85,8 @@ Timetable.Renderer = function(tt) {
 				location: location,
 				startDate: start,
 				endDate: end,
-				url: url
+				url: url,
+                className: className
 			});
 
 			return this;
@@ -179,7 +180,7 @@ Timetable.Renderer = function(tt) {
 				if (hasURL) {
 					aNode.href = event.url;
 				}
-				aNode.className = 'time-entry';
+				aNode.className = 'time-entry' + (event.className ? ' ' + event.className : '');
 				aNode.style.width = computeEventBlockWidth(event);
 				aNode.style.left = computeEventBlockOffset(event);
 				smallNode.textContent = event.name;
