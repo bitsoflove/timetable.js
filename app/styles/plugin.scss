@@ -1,26 +1,27 @@
-//: scss
-// endbower
-
 /* ==========================================================================
-   * Default settings
-   * ========================================================================== */
-
+ * Default settings
+ * ========================================================================== */
 $timetable-hour-column-width: 96px !default;
 $timetable-hour-row-height: 46px !default;
 $timetable-heading-height: 30px !default;
-$timetable-breakpoint: 960px !default;//: #e5e5e5 !default;
+$timetable-breakpoint: 960px !default;
+$timetable-grid-color: #e5e5e5 !default;
 $timetable-grid: 1px solid $timetable-grid-color !default;
 $timetable-row-header-padding: 15px !default;
-$timetable-row-header-color: #efefef !default;
+$timetable-row-header-bg: #efefef !default;
+$timetable-row-header-color: #000 !default;
+$timetable-row-header-font-weight: 500 !default;
 $timetable-legend-row-separator: 1px solid white !default;
 $timetable-entry-row-separator: none !default;
 $timetable-row-header-gap: 5px solid transparent !default;
 $timetable-row-uneven-color: #fdfdfd !default;
 $timetable-row-even-color: #f4f4f4 !default;
-$timetable-entry-color: #ec6a5e !default;
-$timetable-entry-color-hover: darken($timetable-entry-color, 10%) !default;
-$timetable-entry-border: 1px solid darken($timetable-entry-color, 15%) !default;
+$timetable-entry-bg: #333 !default;
+$timetable-entry-color: #fff !default;
+$timetable-entry-hover-bg: darken($timetable-entry-bg, 10%) !default;
+$timetable-entry-border: 1px solid darken($timetable-entry-bg, 15%) !default;
 $timetable-entry-padding: 10px !default;
+$timetable-entry-font-weight: 500 !default;
 
 /* ==========================================================================
  * Mixins
@@ -58,11 +59,15 @@ $timetable-entry-padding: 10px !default;
  * ========================================================================== */
 
 .timetable {
-    box-sizing: border-box;
     @include clearfix;
+    box-sizing: border-box;
 
     *, *:before, *:after {
         box-sizing: inherit;
+    }
+
+    .row-sizer {
+        height: $timetable-hour-row-height;
     }
 
     ul, li {
@@ -82,9 +87,11 @@ $timetable-entry-padding: 10px !default;
         border-right: $timetable-row-header-gap;
 
         li {
+            font-weight: $timetable-row-header-font-weight;
             line-height: $timetable-hour-row-height;
             padding: 0 $timetable-row-header-padding;
-            background-color: $timetable-row-header-color;
+            color: $timetable-row-header-color;
+            background-color: $timetable-row-header-bg;
 
             &:not(:last-of-type) {
                 border-bottom: $timetable-legend-row-separator;
@@ -117,10 +124,10 @@ $timetable-entry-padding: 10px !default;
         }
 
         header {
+            @include clearfix;
             font-size: 0;
             height: $timetable-hour-row-height;
             transform-style: preserve-3d;
-            @include clearfix;
 
             li {
                 font-size: 1rem;
@@ -215,6 +222,8 @@ $timetable-entry-padding: 10px !default;
     }
 
     .time-entry {
+        @include valign-parent;
+        font-weight: $timetable-entry-font-weight;
         position: absolute;
         z-index: 2;
         display: block;
@@ -223,18 +232,18 @@ $timetable-entry-padding: 10px !default;
         padding: 0 $timetable-entry-padding;
         transition: 200ms background-color;
         white-space: normal;
-        color: white;
+        color: $timetable-entry-color;
         border: $timetable-entry-border;
-        background-color: $timetable-entry-color;
-        @include valign-parent;
+        background-color: $timetable-entry-bg;
 
         small {
-            display: block;
             @include valign-middle;
+            @include ellipsis();
+            display: block;
         }
 
         &:hover {
-            background-color: $timetable-entry-color-hover;
+            background-color: $timetable-entry-hover-bg;
         }
     }
 }
